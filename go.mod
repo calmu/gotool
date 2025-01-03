@@ -1,4 +1,4 @@
-module gotool
+module github.com/calmu/gotool
 
 go 1.21.0
 
