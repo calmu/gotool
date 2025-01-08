@@ -1,56 +1,52 @@
-// Package saramabatch
+// Package normalbatch
 //
 // ----------------develop info----------------
 //
-//	@Author huang_calvin@163.com
-//	@DateTime 2025-1-3 11:00
+//	@Author xunmuhuang@rastar.com
+//	@DateTime 2025-1-7 17:19
 //
 // --------------------------------------------
-package saramabatch
+package normalbatch
 
-import "github.com/IBM/sarama"
-
-// BatchMsgList
-// @Description: 存储msg
-type BatchMsgList struct {
-	list            []*sarama.ProducerMessage
+type SliceInterfaceBatch struct {
+	list            []interface{}
 	mapUuidWithList map[string]int
 	mapWithList     map[int]struct{}
 	len             int
 }
 
-// NewBatchMsgList
+// NewSliceInterfaceBatch
 //
-//	@Description: 获取一个实例
+//	@Description:获取一个实例
 //	@param len int
-//	@return *BatchMsgList
+//	@return *SliceInterfaceBatch
 //
 // ----------------develop info----------------
 //
-//	@Author:		huang_calvin@163.com
-//	@DateTime:		2024-09-03 11:12:08
+//	@Author:		xunmuhuang@rastar.com
+//	@DateTime:		2025-01-07 17:29:46
 //
 // --------------------------------------------
-func NewBatchMsgList(len int) *BatchMsgList {
-	return &BatchMsgList{len: len, list: make([]*sarama.ProducerMessage, 0, len), mapUuidWithList: make(map[string]int, len), mapWithList: make(map[int]struct{}, len)}
+func NewSliceInterfaceBatch(len int) *SliceInterfaceBatch {
+	return &SliceInterfaceBatch{len: len, list: make([]interface{}, 0, len), mapUuidWithList: make(map[string]int, len), mapWithList: make(map[int]struct{}, len)}
 }
 
 // Push
 //
 //	@Description: 插入list并且返回长度(如果有相同的uuid，则先到先得)
-//	@receiver: a *BatchMsgList
+//	@receiver: a *SliceInterfaceBatch
 //	@receiver a
-//	@param msg *sarama.ProducerMessage
+//	@param msg interface{}
 //	@param uuid string
 //	@return int
 //
 // ----------------develop info----------------
 //
 //	@Author:		huang_calvin@163.com
-//	@DateTime:		2024-09-03 11:31:41
+//	@DateTime:		2024-09-07 11:31:41
 //
 // --------------------------------------------
-func (a *BatchMsgList) Push(msg *sarama.ProducerMessage, uuid string) int {
+func (a *SliceInterfaceBatch) Push(msg interface{}, uuid string) int {
 	if _, ok := a.mapUuidWithList[uuid]; ok {
 		return len(a.list)
 	}
@@ -64,17 +60,17 @@ func (a *BatchMsgList) Push(msg *sarama.ProducerMessage, uuid string) int {
 // GetClean
 //
 //	@Description: 返回过滤后的列表并且清理
-//	@receiver: a *BatchMsgList
+//	@receiver: a *SliceInterfaceBatch
 //	@receiver a
-//	@return []*sarama.ProducerMessage
+//	@return []interface{}
 //
 // ----------------develop info----------------
 //
 //	@Author:		huang_calvin@163.com
-//	@DateTime:		2024-09-03 14:57:40
+//	@DateTime:		2024-09-07 14:57:40
 //
 // --------------------------------------------
-func (a *BatchMsgList) GetClean() []*sarama.ProducerMessage {
+func (a *SliceInterfaceBatch) GetClean() []interface{} {
 	defer func() {
 		a.list = a.list[:0]
 		a.mapUuidWithList = make(map[string]int, a.len)
@@ -82,7 +78,7 @@ func (a *BatchMsgList) GetClean() []*sarama.ProducerMessage {
 	}()
 
 	l := len(a.list)
-	dataList := make([]*sarama.ProducerMessage, 0, l)
+	dataList := make([]interface{}, 0, l)
 	for i := 0; i < l; i++ {
 		if _, ok := a.mapWithList[i]; ok {
 			dataList = append(dataList, a.list[i])
@@ -94,18 +90,18 @@ func (a *BatchMsgList) GetClean() []*sarama.ProducerMessage {
 // Filter
 //
 //	@Description: 过滤单条
-//	@receiver: a *BatchMsgList
+//	@receiver: a *SliceInterfaceBatch
 //	@receiver a
 //	@param uuid string
-//	@return *BatchMsgList
+//	@return *SliceInterfaceBatch
 //
 // ----------------develop info----------------
 //
 //	@Author:		huang_calvin@163.com
-//	@DateTime:		2024-09-03 14:58:35
+//	@DateTime:		2024-09-07 14:58:35
 //
 // --------------------------------------------
-func (a *BatchMsgList) Filter(uuid string) *BatchMsgList {
+func (a *SliceInterfaceBatch) Filter(uuid string) *SliceInterfaceBatch {
 	delete(a.mapWithList, a.mapUuidWithList[uuid])
 	return a
 }
@@ -113,18 +109,18 @@ func (a *BatchMsgList) Filter(uuid string) *BatchMsgList {
 // FilterMulti
 //
 //	@Description: 批量过滤
-//	@receiver: a *BatchMsgList
+//	@receiver: a *SliceInterfaceBatch
 //	@receiver a
 //	@param filter []string
-//	@return BatchMsgList
+//	@return SliceInterfaceBatch
 //
 // ----------------develop info----------------
 //
 //	@Author:		huang_calvin@163.com
-//	@DateTime:		2024-09-03 11:38:31
+//	@DateTime:		2024-09-07 11:38:31
 //
 // --------------------------------------------
-func (a *BatchMsgList) FilterMulti(filter []string) *BatchMsgList {
+func (a *SliceInterfaceBatch) FilterMulti(filter []string) *SliceInterfaceBatch {
 	if len(filter) == 0 {
 		return a
 	}
@@ -138,17 +134,17 @@ func (a *BatchMsgList) FilterMulti(filter []string) *BatchMsgList {
 // GetUuidList
 //
 //	@Description: 获得批次的uuid切片
-//	@receiver: a *BatchMsgList
+//	@receiver: a *SliceInterfaceBatch
 //	@receiver a
 //	@return []string
 //
 // ----------------develop info----------------
 //
 //	@Author:		huang_calvin@163.com
-//	@DateTime:		2024-09-03 14:21:39
+//	@DateTime:		2024-09-07 14:21:39
 //
 // --------------------------------------------
-func (a *BatchMsgList) GetUuidList() []string {
+func (a *SliceInterfaceBatch) GetUuidList() []string {
 	list := make([]string, 0, len(a.list))
 	for s := range a.mapUuidWithList {
 		list = append(list, s)
