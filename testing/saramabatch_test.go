@@ -6,70 +6,14 @@
 //	@DateTime 2025-1-8 14:54
 //
 // --------------------------------------------
-package gotool
+package testing
 
 import (
-	"encoding/json"
 	"fmt"
-	"github.com/IBM/sarama"
 	"github.com/calmu/gotool/saramabatch"
-	"math/rand"
+	"github.com/calmu/gotool/testing/common"
 	"testing"
-	"time"
 )
-
-func buildSaramaBatch(len, repeat int) map[string]sarama.ProducerMessage {
-	r := rand.New(rand.NewSource(time.Now().UnixNano()))
-	index := r.Intn(3)
-	m := make(map[string]sarama.ProducerMessage, len)
-	switch index {
-	case 0:
-		for k, v := range buildByte(len, repeat) {
-			m[k] = sarama.ProducerMessage{
-				Topic:     "test_topic",
-				Key:       sarama.StringEncoder(k),
-				Value:     sarama.ByteEncoder(v),
-				Partition: int32(index),
-			}
-		}
-		return m
-	case 1:
-		for k, v := range buildString(len, repeat) {
-			m[k] = sarama.ProducerMessage{
-				Topic:     "test_topic",
-				Key:       sarama.StringEncoder(k),
-				Value:     sarama.ByteEncoder(v),
-				Partition: int32(index),
-			}
-		}
-		return m
-	}
-	realLen := len - repeat
-	for i := 1; i <= realLen; i++ {
-		if repeat > 0 {
-			k := fmt.Sprintf("a%d", repeat)
-			info := map[string]interface{}{"id": k, "name": fmt.Sprintf("a%db%d", repeat, repeat)}
-			v, _ := json.Marshal(info)
-			m[fmt.Sprintf("a%d", repeat)] = sarama.ProducerMessage{
-				Topic:     "test_topic",
-				Key:       sarama.StringEncoder(k),
-				Value:     sarama.ByteEncoder(v),
-				Partition: int32(index),
-			}
-		}
-		k := fmt.Sprintf("a%d", i)
-		info := map[string]interface{}{"id": k, "name": fmt.Sprintf("a%db%d", i, i)}
-		v, _ := json.Marshal(info)
-		m[fmt.Sprintf("a%d", i)] = sarama.ProducerMessage{
-			Topic:     "test_topic",
-			Key:       sarama.StringEncoder(k),
-			Value:     sarama.ByteEncoder(v),
-			Partition: int32(index),
-		}
-		repeat--
-	}
-	return m
-}
 
 func TestSaramaBatch(t *testing.T) {
 	tests := []struct {
@@ -85,7 +29,7 @@ func TestSaramaBatch(t *testing.T) {
 		batch := saramabatch.NewBatchMsgList(test.len)
 		list := make([]string, 0, test.filter)
 		realLen := 0
-		for s, bytes := range buildSaramaBatch(test.len, test.repeat) {
+		for s, bytes := range common.NewBuild().BuildSaramaBatch(test.len, test.repeat) {
 			if len(list) < test.filter {
 				list = append(list, s)
 			}
@@ -113,7 +57,7 @@ func TestSaramaBatch2(t *testing.T) {
 		batch := saramabatch.NewBatchMsgList(test.len)
 		list := make([]string, 0, test.filter)
 		realLen := 0
-		for s, bytes := range buildSaramaBatch(test.len, test.repeat) {
+		for s, bytes := range common.NewBuild().BuildSaramaBatch(test.len, test.repeat) {
 			if len(list) < test.filter {
 				list = append(list, s)
 			}
