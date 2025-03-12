@@ -76,7 +76,7 @@ func (a *BatchMsgList) Push(msg *sarama.ProducerMessage, uuid string) int {
 // --------------------------------------------
 func (a *BatchMsgList) GetClean() []*sarama.ProducerMessage {
 	defer func() {
-		a.list = a.list[:0]
+		a.list = make([]*sarama.ProducerMessage, 0, a.len)
 		a.mapUuidWithList = make(map[string]int, a.len)
 		a.mapWithList = make(map[int]struct{}, a.len)
 	}()
