@@ -97,7 +97,7 @@ func (a *BatchMsgList) GetClean() []*sarama.ProducerMessage {
 //	@receiver: a *BatchMsgList
 //	@receiver a
 //	@param uuid string
-//	@return *BatchMsgList
+//	@return bool
 //
 // ----------------develop info----------------
 //
@@ -105,9 +105,12 @@ func (a *BatchMsgList) GetClean() []*sarama.ProducerMessage {
 //	@DateTime:		2024-09-03 14:58:35
 //
 // --------------------------------------------
-func (a *BatchMsgList) Filter(uuid string) *BatchMsgList {
-	delete(a.mapWithList, a.mapUuidWithList[uuid])
-	return a
+func (a *BatchMsgList) Filter(uuid string) bool {
+	if _, ok := a.mapUuidWithList[uuid]; ok {
+		delete(a.mapWithList, a.mapUuidWithList[uuid])
+		return true
+	}
+	return false
 }
 
 // FilterMulti
@@ -116,7 +119,7 @@ func (a *BatchMsgList) Filter(uuid string) *BatchMsgList {
 //	@receiver: a *BatchMsgList
 //	@receiver a
 //	@param filter []string
-//	@return BatchMsgList
+//	@return []string
 //
 // ----------------develop info----------------
 //
@@ -124,15 +127,19 @@ func (a *BatchMsgList) Filter(uuid string) *BatchMsgList {
 //	@DateTime:		2024-09-03 11:38:31
 //
 // --------------------------------------------
-func (a *BatchMsgList) FilterMulti(filter []string) *BatchMsgList {
+func (a *BatchMsgList) FilterMulti(filter []string) []string {
 	if len(filter) == 0 {
-		return a
+		return nil
 	}
+	res := make([]string, 0, len(filter))
 	for _, uuid := range filter {
-		delete(a.mapWithList, a.mapUuidWithList[uuid])
+		if _, ok := a.mapUuidWithList[uuid]; ok {
+			delete(a.mapWithList, a.mapUuidWithList[uuid])
+			res = append(res, uuid)
+		}
 	}
 
-	return a
+	return res
 }
 
 // GetUuidList

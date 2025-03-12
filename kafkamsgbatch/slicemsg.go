@@ -78,7 +78,7 @@ func (a *SliceMsgBatch) Push(msg *KafkaMsg, uuid string) int {
 // --------------------------------------------
 func (a *SliceMsgBatch) GetClean() []*KafkaMsg {
 	defer func() {
-		a.list = a.list[:0]
+		a.list = make([]*KafkaMsg, 0, a.len)
 		a.mapUuidWithList = make(map[string]int, a.len)
 		a.mapWithList = make(map[int]struct{}, a.len)
 	}()
@@ -99,7 +99,7 @@ func (a *SliceMsgBatch) GetClean() []*KafkaMsg {
 //	@receiver: a *SliceMsgBatch
 //	@receiver a
 //	@param uuid string
-//	@return *SliceMsgBatch
+//	@return bool
 //
 // ----------------develop info----------------
 //
@@ -107,9 +107,12 @@ func (a *SliceMsgBatch) GetClean() []*KafkaMsg {
 //	@DateTime:		2024-09-08 14:58:35
 //
 // --------------------------------------------
-func (a *SliceMsgBatch) Filter(uuid string) *SliceMsgBatch {
-	delete(a.mapWithList, a.mapUuidWithList[uuid])
-	return a
+func (a *SliceMsgBatch) Filter(uuid string) bool {
+	if _, ok := a.mapUuidWithList[uuid]; ok {
+		delete(a.mapWithList, a.mapUuidWithList[uuid])
+		return true
+	}
+	return false
 }
 
 // FilterMulti
@@ -118,7 +121,7 @@ func (a *SliceMsgBatch) Filter(uuid string) *SliceMsgBatch {
 //	@receiver: a *SliceMsgBatch
 //	@receiver a
 //	@param filter []string
-//	@return SliceMsgBatch
+//	@return []string
 //
 // ----------------develop info----------------
 //
@@ -126,15 +129,19 @@ func (a *SliceMsgBatch) Filter(uuid string) *SliceMsgBatch {
 //	@DateTime:		2024-09-08 11:38:31
 //
 // --------------------------------------------
-func (a *SliceMsgBatch) FilterMulti(filter []string) *SliceMsgBatch {
+func (a *SliceMsgBatch) FilterMulti(filter []string) []string {
 	if len(filter) == 0 {
-		return a
+		return nil
 	}
+	res := make([]string, 0, len(filter))
 	for _, uuid := range filter {
-		delete(a.mapWithList, a.mapUuidWithList[uuid])
+		if _, ok := a.mapUuidWithList[uuid]; ok {
+			delete(a.mapWithList, a.mapUuidWithList[uuid])
+			res = append(res, uuid)
+		}
 	}
 
-	return a
+	return res
 }
 
 // GetUuidList
