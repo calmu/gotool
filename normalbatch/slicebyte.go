@@ -72,7 +72,7 @@ func (a *SliceByteBatch) Push(msg []byte, uuid string) int {
 // --------------------------------------------
 func (a *SliceByteBatch) GetClean() [][]byte {
 	defer func() {
-		a.list = a.list[:0]
+		a.list = make([][]byte, 0, a.len)
 		a.mapUuidWithList = make(map[string]int, a.len)
 		a.mapWithList = make(map[int]struct{}, a.len)
 	}()
@@ -93,7 +93,7 @@ func (a *SliceByteBatch) GetClean() [][]byte {
 //	@receiver: a *SliceByteBatch
 //	@receiver a
 //	@param uuid string
-//	@return *SliceByteBatch
+//	@return bool
 //
 // ----------------develop info----------------
 //
@@ -101,9 +101,12 @@ func (a *SliceByteBatch) GetClean() [][]byte {
 //	@DateTime:		2024-09-07 14:58:35
 //
 // --------------------------------------------
-func (a *SliceByteBatch) Filter(uuid string) *SliceByteBatch {
-	delete(a.mapWithList, a.mapUuidWithList[uuid])
-	return a
+func (a *SliceByteBatch) Filter(uuid string) bool {
+	if _, ok := a.mapUuidWithList[uuid]; ok {
+		delete(a.mapWithList, a.mapUuidWithList[uuid])
+		return true
+	}
+	return false
 }
 
 // FilterMulti
@@ -112,7 +115,7 @@ func (a *SliceByteBatch) Filter(uuid string) *SliceByteBatch {
 //	@receiver: a *SliceByteBatch
 //	@receiver a
 //	@param filter []string
-//	@return SliceByteBatch
+//	@return []string
 //
 // ----------------develop info----------------
 //
@@ -120,15 +123,19 @@ func (a *SliceByteBatch) Filter(uuid string) *SliceByteBatch {
 //	@DateTime:		2024-09-07 11:38:31
 //
 // --------------------------------------------
-func (a *SliceByteBatch) FilterMulti(filter []string) *SliceByteBatch {
+func (a *SliceByteBatch) FilterMulti(filter []string) []string {
 	if len(filter) == 0 {
-		return a
+		return nil
 	}
+	res := make([]string, 0, len(filter))
 	for _, uuid := range filter {
-		delete(a.mapWithList, a.mapUuidWithList[uuid])
+		if _, ok := a.mapUuidWithList[uuid]; ok {
+			delete(a.mapWithList, a.mapUuidWithList[uuid])
+			res = append(res, uuid)
+		}
 	}
 
-	return a
+	return res
 }
 
 // GetUuidList

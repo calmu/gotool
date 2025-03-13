@@ -72,7 +72,7 @@ func (a *SliceInterfaceBatch) Push(msg interface{}, uuid string) int {
 // --------------------------------------------
 func (a *SliceInterfaceBatch) GetClean() []interface{} {
 	defer func() {
-		a.list = a.list[:0]
+		a.list = make([]interface{}, 0, a.len)
 		a.mapUuidWithList = make(map[string]int, a.len)
 		a.mapWithList = make(map[int]struct{}, a.len)
 	}()
@@ -93,7 +93,7 @@ func (a *SliceInterfaceBatch) GetClean() []interface{} {
 //	@receiver: a *SliceInterfaceBatch
 //	@receiver a
 //	@param uuid string
-//	@return *SliceInterfaceBatch
+//	@return bool
 //
 // ----------------develop info----------------
 //
@@ -101,9 +101,12 @@ func (a *SliceInterfaceBatch) GetClean() []interface{} {
 //	@DateTime:		2024-09-07 14:58:35
 //
 // --------------------------------------------
-func (a *SliceInterfaceBatch) Filter(uuid string) *SliceInterfaceBatch {
-	delete(a.mapWithList, a.mapUuidWithList[uuid])
-	return a
+func (a *SliceInterfaceBatch) Filter(uuid string) bool {
+	if _, ok := a.mapUuidWithList[uuid]; ok {
+		delete(a.mapWithList, a.mapUuidWithList[uuid])
+		return true
+	}
+	return false
 }
 
 // FilterMulti
@@ -112,7 +115,7 @@ func (a *SliceInterfaceBatch) Filter(uuid string) *SliceInterfaceBatch {
 //	@receiver: a *SliceInterfaceBatch
 //	@receiver a
 //	@param filter []string
-//	@return SliceInterfaceBatch
+//	@return []string
 //
 // ----------------develop info----------------
 //
@@ -120,15 +123,19 @@ func (a *SliceInterfaceBatch) Filter(uuid string) *SliceInterfaceBatch {
 //	@DateTime:		2024-09-07 11:38:31
 //
 // --------------------------------------------
-func (a *SliceInterfaceBatch) FilterMulti(filter []string) *SliceInterfaceBatch {
+func (a *SliceInterfaceBatch) FilterMulti(filter []string) []string {
 	if len(filter) == 0 {
-		return a
+		return nil
 	}
+	res := make([]string, 0, len(filter))
 	for _, uuid := range filter {
-		delete(a.mapWithList, a.mapUuidWithList[uuid])
+		if _, ok := a.mapUuidWithList[uuid]; ok {
+			delete(a.mapWithList, a.mapUuidWithList[uuid])
+			res = append(res, uuid)
+		}
 	}
 
-	return a
+	return res
 }
 
 // GetUuidList
